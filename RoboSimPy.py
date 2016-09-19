@@ -110,13 +110,14 @@ class RobotClass():
 		normalizingDistributionValue = self.gaussian(0.0,self.sense_noise, 0.0) 
 		for i in range(len(measurments)):
 			actualDist = sqrt((self.x - landmarks[i][0])**2 + (self.y - landmarks[i][1])**2)
-			print measurments[i], actualDist, self.sense_noise, self.gaussian(actualDist,self.sense_noise, measurments[i])/normalizingDistributionValue
+			# print measurments[i], actualDist, self.sense_noise, self.gaussian(actualDist,self.sense_noise, measurments[i])/normalizingDistributionValue
 			probability *= self.gaussian(actualDist,self.sense_noise, measurments[i])/normalizingDistributionValue
 		return probability
 
 	def calculate_distance_between_robots(self,other_robot):
 		distance = sqrt((self.x - other_robot.x)**2 + (self.y - other_robot.y)**2)
 		return distance
+
 
 
 def main():
@@ -138,13 +139,44 @@ def main():
 	myrobot.set_pose(50., 50., 1.25*pi)
 
 
-	for i in range(40):
-		myrobot = myrobot.move(0.0, 1.0)
-		landmarkDistances = myrobot.sense_landmarks()
-		print myrobot.calculate_measurment_probability(landmarkDistances)
-		# myrobot.calculate_measurment_probability(landmarkDistances)
+
+	#Start of particle filter implementation
+	number_of_particles=10
+	list_of_particles=[]
+
+	for i in range(number_of_particles):
+		x = RobotClass()
+		x.set_noise(0.005 ,0.0017, 0.1)
+		x.set_sensor_vision_range(200.)
+		#Since we do now know where the robot will start
+		#lets put the particels uniformly distributed thought the map
+		x_pos = random.uniform(0,100)
+		x.set_pose(x_pos,x_pos, random.uniform(0,2*pi))
+		list_of_particles.append(x)
+
+	number_of_steps=10
+
+	for step in range(number_of_steps):
+		# First move the actual robot
+		myrobot = myrobot.move(0.1,1.0)
 		plt.scatter(myrobot.x, myrobot.y, color='green')
+
+		#the measurments taken with the sensors on the robot
+		z = myrobot.sense_landmarks() 
+
+		#simulate the same measurment for all the particles that you have
+		particles_simulated_motion =[]
+		for i in range(number_of_particles):
+			particles_simulated_motion.append(list_of_particles[i].move(0.1,1.0))
+			plt.scatter(particles_simulated_motion[i].x, particles_simulated_motion[i].y, color='blue')
+
 		plt.pause(0.1)
+
+	# for i in range(40):
+	# 	myrobot = myrobot.move(0.0, 1.0)
+	# 	landmarkDistances = myrobot.sense_landmarks()
+	# 	# print myrobot.calculate_measurment_probability(landmarkDistances)
+	# 	myrobot.calculate_measurment_probability(landmarkDistances)
 
 
 
