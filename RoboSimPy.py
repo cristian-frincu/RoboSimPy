@@ -104,10 +104,14 @@ class RobotClass():
 		#this might be a bit more complicated if the sensor vision does not 
 		#see all the landmarks at all time
 		probability = 1.0
+		#At the mean, the normal distribution will give the max value of the function
+		#I will use this as a normalizing factor, to get my likelyhood probabilities between
+		#0 and 1
+		normalizingDistributionValue = self.gaussian(0.0,self.sense_noise, 0.0) 
 		for i in range(len(measurments)):
 			actualDist = sqrt((self.x - landmarks[i][0])**2 + (self.y - landmarks[i][1])**2)
-			print measurments[i], actualDist, self.sense_noise, self.gaussian(actualDist,self.sense_noise, measurments[i])
-			# probability *= self.gaussian(actualDist,self.sense_noise, measurments[i])
+			print measurments[i], actualDist, self.sense_noise, self.gaussian(actualDist,self.sense_noise, measurments[i])/normalizingDistributionValue
+			probability *= self.gaussian(actualDist,self.sense_noise, measurments[i])/normalizingDistributionValue
 		return probability
 
 	def calculate_distance_between_robots(self,other_robot):
@@ -129,20 +133,19 @@ def main():
 
 	# set noise parameters
 	#5mm error per move, .1 degree orientation per move, 10cm for measurment
-	myrobot.set_noise(0.005 ,0.0017, 0.2)
+	myrobot.set_noise(0.005 ,0.0017, 0.1)
 	myrobot.set_sensor_vision_range(200.)
 	myrobot.set_pose(50., 50., 1.25*pi)
 
 
-	# clockwise turn and move
 	for i in range(40):
 		myrobot = myrobot.move(0.0, 1.0)
-		# landmarkDistances = myrobot.sense_landmarks()
-		# print myrobot.calculate_measurment_probability(landmarkDistances)
+		landmarkDistances = myrobot.sense_landmarks()
+		print myrobot.calculate_measurment_probability(landmarkDistances)
 		# myrobot.calculate_measurment_probability(landmarkDistances)
 		plt.scatter(myrobot.x, myrobot.y, color='green')
 		plt.pause(0.1)
-		
+
 
 
 if __name__ == "__main__":
