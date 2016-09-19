@@ -142,6 +142,7 @@ def main():
 		# myrobot.calculate_measurment_probability(landmarkDistances)
 		plt.scatter(myrobot.x, myrobot.y, color='green')
 		plt.pause(0.1)
+		
 
 
 if __name__ == "__main__":
