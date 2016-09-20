@@ -136,12 +136,12 @@ def main():
 	#5mm error per move, .1 degree orientation per move, 10cm for measurment
 	myrobot.set_noise(0.005 ,0.0017, 0.1)
 	myrobot.set_sensor_vision_range(200.)
-	myrobot.set_pose(50., 50., 1.25*pi)
+	myrobot.set_pose(50., 50., 1.25*pi)	
 
 
 
 	#Start of particle filter implementation
-	number_of_particles=10
+	number_of_particles=100
 	list_of_particles=[]
 
 	for i in range(number_of_particles):
@@ -150,26 +150,27 @@ def main():
 		x.set_sensor_vision_range(200.)
 		#Since we do now know where the robot will start
 		#lets put the particels uniformly distributed thought the map
-		x_pos = random.uniform(0,100)
-		x.set_pose(x_pos,x_pos, random.uniform(0,2*pi))
+		x.set_pose(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
 		list_of_particles.append(x)
 
 	number_of_steps=10
 
 	for step in range(number_of_steps):
 		# First move the actual robot
-		myrobot = myrobot.move(0.1,1.0)
+		myrobot = myrobot.move(0.0,1.0)
+		
+		# Then move all the particles in the same directionh
+		for i in range(number_of_particles):
+			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
+			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
+
 		plt.scatter(myrobot.x, myrobot.y, color='green')
+
 
 		#the measurments taken with the sensors on the robot
 		z = myrobot.sense_landmarks() 
 
 		#simulate the same measurment for all the particles that you have
-		particles_simulated_motion =[]
-		for i in range(number_of_particles):
-			particles_simulated_motion.append(list_of_particles[i].move(0.1,1.0))
-			plt.scatter(particles_simulated_motion[i].x, particles_simulated_motion[i].y, color='blue')
-
 		plt.pause(0.1)
 
 	# for i in range(40):
@@ -182,8 +183,7 @@ def main():
 
 if __name__ == "__main__":
 	main()
-	while True:
-		plt.pause(0.05)
+	plt.pause(10)
 
 
 
