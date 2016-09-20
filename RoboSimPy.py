@@ -157,14 +157,28 @@ def main():
 
 	for step in range(number_of_steps):
 		# First move the actual robot
-		myrobot = myrobot.move(0.0,1.0)
+		myrobot = myrobot.move(0.0,2.0)
 		
-		# Then move all the particles in the same directionh
-		for i in range(number_of_particles):
-			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
-			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
 
+		high_likelihood_particles=[]
+		particle_likelihood=[]
+		# Then move all the particles in the same direction
+		# and estimate the likelyhood of measurment
+		for i in range(len(list_of_particles)):
+			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
+
+			landmarkDistances = list_of_particles[i].sense_landmarks()
+			measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
+
+			if measurment_likelihood > 0.20:
+				print "Added particle",i
+				high_likelihood_particles.append(list_of_particles[i])
+				particle_likelihood.append(measurment_likelihood)
+
+			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
 		plt.scatter(myrobot.x, myrobot.y, color='green')
+
+
 
 
 		#the measurments taken with the sensors on the robot
@@ -172,12 +186,6 @@ def main():
 
 		#simulate the same measurment for all the particles that you have
 		plt.pause(0.1)
-
-	# for i in range(40):
-	# 	myrobot = myrobot.move(0.0, 1.0)
-	# 	landmarkDistances = myrobot.sense_landmarks()
-	# 	# print myrobot.calculate_measurment_probability(landmarkDistances)
-	# 	myrobot.calculate_measurment_probability(landmarkDistances)
 
 
 
