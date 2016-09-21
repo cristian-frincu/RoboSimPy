@@ -10,7 +10,6 @@ landmarks = [[20.0, 20.0], [20.0, 80.0], [20.0, 50.0],
              [80.0, 20.0], [80.0, 50.0]]
 
 
-
 class RobotClass():
 	def __str__(self):
 		return str(self.x)+", "+str(self.y)+", "+str(self.orientation)
@@ -141,7 +140,7 @@ def main():
 
 
 	#Start of particle filter implementation
-	number_of_particles=100
+	number_of_particles=500
 	list_of_particles=[]
 
 	for i in range(number_of_particles):
@@ -165,20 +164,33 @@ def main():
 		# Then move all the particles in the same direction
 		# and estimate the likelyhood of measurment
 		for i in range(len(list_of_particles)):
+			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+	
 			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
 
 			landmarkDistances = list_of_particles[i].sense_landmarks()
 			measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
 
-			if measurment_likelihood > 0.20:
-				print "Added particle",i
+			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
+			
+			if random.uniform(0,1) > 0.5:
+				# print "Added particle",i
 				high_likelihood_particles.append(list_of_particles[i])
 				particle_likelihood.append(measurment_likelihood)
+			else:
+				plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+			
 
-			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
 		plt.scatter(myrobot.x, myrobot.y, color='green')
 
-
+		for index in range(len(high_likelihood_particles)):
+			if random.uniform(0,1) > 0.5:
+				new_particle = high_likelihood_particles[index]
+				high_likelihood_particles.append(new_particle)
+			else:
+				plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+			
+		list_of_particles = high_likelihood_particles
 
 
 		#the measurments taken with the sensors on the robot
