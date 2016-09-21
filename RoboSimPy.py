@@ -7,7 +7,8 @@ wordSize=100
 
 landmarks = [[20.0, 20.0], [20.0, 80.0], [20.0, 50.0],
              [50.0, 20.0], [50.0, 80.0], [80.0, 80.0],
-             [80.0, 20.0], [80.0, 50.0]]
+             [80.0, 20.0], [80.0, 50.0], [75.0, 55.0],
+             [50.0, 25.0], [25.0, 25.0], [30.0, 40.0]]
 
 
 class RobotClass():
@@ -31,10 +32,11 @@ class RobotClass():
 		else:
 			print "New coordinated out of bounds"
 
-		if new_orientation <= 2*pi and new_orientation >= 0:
+		if new_orientation < 2*pi and new_orientation > 0:
 			self.orientation = new_orientation
 		else:
 			print "New orientation out of bounds"
+
 
 	def set_noise(self,new_forward_noise, new_turn_noise, new_sense_noise):
 		self.forward_noise = new_forward_noise
@@ -140,7 +142,7 @@ def main():
 
 
 	#Start of particle filter implementation
-	number_of_particles=500
+	number_of_particles=250
 	list_of_particles=[]
 
 	for i in range(number_of_particles):
@@ -152,7 +154,7 @@ def main():
 		x.set_pose(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
 		list_of_particles.append(x)
 
-	number_of_steps=10
+	number_of_steps=10000
 
 	for step in range(number_of_steps):
 		# First move the actual robot
@@ -161,49 +163,83 @@ def main():
 
 		high_likelihood_particles=[]
 		particle_likelihood=[]
+
 		# Then move all the particles in the same direction
 		# and estimate the likelyhood of measurment
 		for i in range(len(list_of_particles)):
-			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
-	
+			# plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
 			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
-
-			landmarkDistances = list_of_particles[i].sense_landmarks()
-			measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
-
 			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
 			
+
+			#Add particles to the high likelyhood ones
 			if random.uniform(0,1) > 0.5:
-				# print "Added particle",i
 				high_likelihood_particles.append(list_of_particles[i])
+				landmarkDistances = list_of_particles[i].sense_landmarks()
+				measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
 				particle_likelihood.append(measurment_likelihood)
-			else:
-				plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+			# else:
+			# 	plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
 			
 
 		plt.scatter(myrobot.x, myrobot.y, color='green')
 
-		for index in range(len(high_likelihood_particles)):
-			if random.uniform(0,1) > 0.5:
-				new_particle = high_likelihood_particles[index]
+
+		MIN_PARTICLES=20
+		particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
+		
+		for particle in particles_with_likelihood:
+			if particle[1] > 0.5 :
+				new_particle = particle[0]
 				high_likelihood_particles.append(new_particle)
-			else:
-				plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+			# else:
+				# plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
 			
-		list_of_particles = high_likelihood_particles
+		
+		## Resampling based on the measurment likelihood
+		# First start by matching the particle with its corresponding measurment likelihood
+		if len(high_likelihood_particles)< MIN_PARTICLES:
+			particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
+			resampled_particles=[]
+			for particle in particles_with_likelihood:
+				for i in range(int(particle[1])):
+					new_particle =particle[0]
+					# print particle[0].orientation
+					new_x = (particle[0].x + random.uniform(0,50))%100
+					new_y = (particle[0].y + random.uniform(0,50))%100
+					new_orientation = (particle[0].orientation + random.uniform(0,pi*2))%pi*2
+					new_particle.set_pose(new_x, new_y, new_orientation)
+					resampled_particles.append(new_particle)
+		else:
+			resampled_particles= high_likelihood_particles
+			# print number_of_particles_to_resampled
+
+
+
+		list_of_particles = resampled_particles
+		print "Particles in the system:",len(list_of_particles)
 
 
 		#the measurments taken with the sensors on the robot
 		z = myrobot.sense_landmarks() 
 
-		#simulate the same measurment for all the particles that you have
-		plt.pause(0.1)
 
+		#Measurment of how close the particles are to the actual robot
+		distances=[]
+		for i in list_of_particles:
+			distances.append(myrobot.calculate_distance_between_robots(i))
+
+		print "Closest Particle at:",min(distances)
+
+
+
+		#simulate the same measurment for all the particles that you have
+		plt.pause(0.001)
 
 
 if __name__ == "__main__":
 	main()
-	plt.pause(10)
+	plt.pause(1000)
 
 
 
