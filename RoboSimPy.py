@@ -154,7 +154,7 @@ def main():
 		x.set_pose(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
 		list_of_particles.append(x)
 
-	number_of_steps=10000
+	number_of_steps=1000
 
 	for step in range(number_of_steps):
 		# First move the actual robot
