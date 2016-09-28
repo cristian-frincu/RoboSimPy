@@ -153,6 +153,7 @@ def main():
 	#Start of particle filter implementation
 	number_of_particles=5 #particle at the beggining of the simulation
 	list_of_particles=[]
+	list_of_likelihoods=[]
 
 	for i in range(number_of_particles):
 		x = RobotClass()
@@ -178,6 +179,7 @@ def main():
 			landmarkDistances = list_of_particles[particle_index].sense_landmarks()
 			likelihood = list_of_particles[particle_index].calculate_measurment_probability(landmarkDistances)
 			list_of_particles[particle_index].setParticle_likelihood(likelihood)
+			list_of_likelihoods.append(likelihood)
 
 			#At this point, we have a likelyhood attached to each particle, based
 			#on the measurments it has made.
@@ -185,12 +187,16 @@ def main():
 			#Instead of droping particles with low likelihood, we will only pass the
 			#particles with a high likelihood on to the next level
 
-
+			
+			if list_of_particles[particle_index].getParticle_likelihood()> 0.05:
+				high_likelihood_particles.append(list_of_particles[particle_index])
 
 			plt.scatter(list_of_particles[particle_index].x, list_of_particles[particle_index].y, color='blue')
 
 
 		plt.pause(0.001)
+
+		list_of_particles = high_likelihood_particles
 		print len(list_of_particles)
 
 	# for step in range(number_of_steps):
