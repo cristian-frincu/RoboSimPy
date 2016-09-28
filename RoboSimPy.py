@@ -119,6 +119,15 @@ class RobotClass():
 		distance = sqrt((self.x - other_robot.x)**2 + (self.y - other_robot.y)**2)
 		return distance
 
+	def getParticle_likelihood(self):
+		return self.particle_likelihood
+
+	def setParticle_likelihood(self,value):
+		if value >= 0.0:
+			self.particle_likelihood = value
+		else:
+			print "Particle likelihoo out of bounds"
+
 
 
 def main():
@@ -142,7 +151,7 @@ def main():
 
 
 	#Start of particle filter implementation
-	number_of_particles=250
+	number_of_particles=5 #particle at the beggining of the simulation
 	list_of_particles=[]
 
 	for i in range(number_of_particles):
@@ -154,87 +163,107 @@ def main():
 		x.set_pose(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
 		list_of_particles.append(x)
 
-	number_of_steps=1000
-
+	number_of_steps=10
+	high_likelihood_particles=[]
 	for step in range(number_of_steps):
-		# First move the actual robot
+		# # First move the actual robot
 		myrobot = myrobot.move(0.0,2.0)
-		
-
-		high_likelihood_particles=[]
-		particle_likelihood=[]
-
-		# Then move all the particles in the same direction
-		# and estimate the likelyhood of measurment
-		for i in range(len(list_of_particles)):
-			# plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
-			list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
-			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
-			
-
-			#Add particles to the high likelyhood ones
-			if random.uniform(0,1) > 0.5:
-				high_likelihood_particles.append(list_of_particles[i])
-				landmarkDistances = list_of_particles[i].sense_landmarks()
-				measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
-				particle_likelihood.append(measurment_likelihood)
-			# else:
-			# 	plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
-			
-
 		plt.scatter(myrobot.x, myrobot.y, color='green')
 
-
-		MIN_PARTICLES=20
-		particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
-		
-		for particle in particles_with_likelihood:
-			if particle[1] > 0.5 :
-				new_particle = particle[0]
-				high_likelihood_particles.append(new_particle)
-			# else:
-				# plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+		for particle_index in range(len(list_of_particles)):
+			#move all the particles the same way as the actual robot
+			list_of_particles[particle_index] = list_of_particles[particle_index].move(0.0,2.0) 
 			
-		
-		## Resampling based on the measurment likelihood
-		# First start by matching the particle with its corresponding measurment likelihood
-		if len(high_likelihood_particles)< MIN_PARTICLES:
-			particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
-			resampled_particles=[]
-			for particle in particles_with_likelihood:
-				for i in range(int(particle[1])):
-					new_particle =particle[0]
-					# print particle[0].orientation
-					new_x = (particle[0].x + random.uniform(0,50))%100
-					new_y = (particle[0].y + random.uniform(0,50))%100
-					new_orientation = (particle[0].orientation + random.uniform(0,pi*2))%pi*2
-					new_particle.set_pose(new_x, new_y, new_orientation)
-					resampled_particles.append(new_particle)
-		else:
-			resampled_particles= high_likelihood_particles
-			# print number_of_particles_to_resampled
+			#get a likelihood of the particle being correct
+			landmarkDistances = list_of_particles[particle_index].sense_landmarks()
+			likelihood = list_of_particles[particle_index].calculate_measurment_probability(landmarkDistances)
+			list_of_particles[particle_index].setParticle_likelihood(likelihood)
+
+			#At this point, we have a likelyhood attached to each particle, based
+			#on the measurments it has made.
+			#Lets drop particles with a low likelihood
+			#Instead of droping particles with low likelihood, we will only pass the
+			#particles with a high likelihood on to the next level
 
 
 
-		list_of_particles = resampled_particles
-		print "Particles in the system:",len(list_of_particles)
+			plt.scatter(list_of_particles[particle_index].x, list_of_particles[particle_index].y, color='blue')
 
 
-		#the measurments taken with the sensors on the robot
-		z = myrobot.sense_landmarks() 
-
-
-		#Measurment of how close the particles are to the actual robot
-		distances=[]
-		for i in list_of_particles:
-			distances.append(myrobot.calculate_distance_between_robots(i))
-
-		print "Closest Particle at:",min(distances)
-
-
-
-		#simulate the same measurment for all the particles that you have
 		plt.pause(0.001)
+		print len(list_of_particles)
+
+	# for step in range(number_of_steps):
+		# # First move the actual robot
+		# myrobot = myrobot.move(0.0,2.0)
+		
+
+		# high_likelihood_particles=[]
+		# particle_likelihood=[]
+
+		# # Then move all the particles in the same direction
+		# # and estimate the likelyhood of measurment
+		# for i in range(len(list_of_particles)):
+		# 	# plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
+		# 	list_of_particles[i] = list_of_particles[i].move(0.0,2.0)
+		# 	plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
+			
+		# 	#Getting the particle likelihood for each particle
+		# 	landmarkDistances = list_of_particles[i].sense_landmarks()
+		# 	measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
+		# 	particle_likelihood.append(measurment_likelihood)
+			
+		# plt.scatter(myrobot.x, myrobot.y, color='green')
+
+
+		# particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
+		
+		# for particle in particles_with_likelihood:
+		# 	if particle[1] > 0.5 :
+		# 		new_particle = particle[0]
+		# 		high_likelihood_particles.append(new_particle)
+
+
+		# MIN_PARTICLES=20
+		# ## Resampling based on the measurment likelihood
+		# # First start by matching the particle with its corresponding measurment likelihood
+		# if len(high_likelihood_particles)< MIN_PARTICLES:
+		# 	particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
+		# 	resampled_particles=[]
+		# 	for particle in particles_with_likelihood:
+		# 		for i in range(int(particle[1])):
+		# 			new_particle =particle[0]
+		# 			# print particle[0].orientation
+		# 			new_x = (particle[0].x + random.uniform(0,50))%100
+		# 			new_y = (particle[0].y + random.uniform(0,50))%100
+		# 			new_orientation = (particle[0].orientation + random.uniform(0,pi*2))%pi*2
+		# 			new_particle.set_pose(new_x, new_y, new_orientation)
+		# 			resampled_particles.append(new_particle)
+		# else:
+		# 	resampled_particles= high_likelihood_particles
+		# 	# print number_of_particles_to_resampled
+
+
+
+		# list_of_particles = resampled_particles
+		# print "Particles in the system:",len(list_of_particles)
+
+
+		# #the measurments taken with the sensors on the robot
+		# z = myrobot.sense_landmarks() 
+
+
+		# #Measurment of how close the particles are to the actual robot
+		# distances=[]
+		# for i in list_of_particles:
+		# 	distances.append(myrobot.calculate_distance_between_robots(i))
+
+		# print "Closest Particle at:",min(distances)
+
+
+
+		# #simulate the same measurment for all the particles that you have
+		# plt.pause(0.001)
 
 
 if __name__ == "__main__":
