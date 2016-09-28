@@ -154,7 +154,7 @@ def main():
 		x.set_pose(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
 		list_of_particles.append(x)
 
-	number_of_steps=10000
+	number_of_steps=1000
 
 	for step in range(number_of_steps):
 		# First move the actual robot
@@ -172,12 +172,13 @@ def main():
 			plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='blue')
 			
 
+			landmarkDistances = list_of_particles[i].sense_landmarks()
+			measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
+			particle_likelihood.append(measurment_likelihood)
+			
 			#Add particles to the high likelyhood ones
 			if random.uniform(0,1) > 0.5:
 				high_likelihood_particles.append(list_of_particles[i])
-				landmarkDistances = list_of_particles[i].sense_landmarks()
-				measurment_likelihood = list_of_particles[i].calculate_measurment_probability(landmarkDistances)
-				particle_likelihood.append(measurment_likelihood)
 			# else:
 			# 	plt.scatter(list_of_particles[i].x, list_of_particles[i].y, color='white')
 			
@@ -186,6 +187,9 @@ def main():
 
 
 		MIN_PARTICLES=20
+		measurment_ratio = min(particle_likelihood)/max(particle_likelihood)
+		print measurment_ratio
+
 		particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
 		
 		for particle in particles_with_likelihood:
@@ -197,6 +201,8 @@ def main():
 			
 		
 		## Resampling based on the measurment likelihood
+		# What you will end up with is that you will sample more, from areas that have a higher measurment
+		#likelyhood
 		# First start by matching the particle with its corresponding measurment likelihood
 		if len(high_likelihood_particles)< MIN_PARTICLES:
 			particles_with_likelihood = [(x,(y/max(particle_likelihood))*MIN_PARTICLES) for (y,x) in zip(particle_likelihood,high_likelihood_particles)]
