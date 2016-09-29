@@ -235,8 +235,8 @@ def main():
     myrobot = myrobot.move(0.1, 5.0)
     z = myrobot.sense()
 
-
-    number_of_particles = 1000
+    RESAMPLE=True
+    number_of_particles = 500
     list_of_particles = []    
 
 
@@ -272,25 +272,28 @@ def main():
         measurement_ratio = min(weights)/max(weights)
 
         # resampling with a sample probability proportional to the importance weight
-        resampled_particles = []
+        #have the ability to resample, or just ignore the resampling and keep
+        #the same particles
+        if RESAMPLE:
+            resampled_particles = []
 
-        index = int(random.random() * number_of_particles)
-        beta = 0.0
-        mw = max(weights)
+            index = int(random.random() * number_of_particles)
+            beta = 0.0
+            mw = max(weights)
 
-        for i in range(number_of_particles):
-            beta += random.random() * 2.0 * mw
+            for i in range(number_of_particles):
+                beta += random.random() * 2.0 * mw
 
-            while beta > weights[index]:
-                beta -= weights[index]
-                index = (index + 1) % number_of_particles
-            resampled_particles.append(list_of_particles[index])
-        list_of_particles = resampled_particles
-
+                while beta > weights[index]:
+                    beta -= weights[index]
+                    index = (index + 1) % number_of_particles
+                resampled_particles.append(list_of_particles[index])
+            list_of_particles = resampled_particles
+        else:
+            resampled_particles = list_of_particles
 
 
         # visualize the current step
-        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles)
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
 
         if PARTICLE_NUM_CHANGE_DEPENDENT:
@@ -322,10 +325,34 @@ def main():
             if number_of_particles < MINIMUM_PARTICLES:
                 number_of_particles = MINIMUM_PARTICLES
 
+        if PARTICLE_NUM_GMAPPING:
+            #Find Neff, the measure of dispertion of the importace weights
+            #Start by normalizing the weights
+            normalized_weights=[]
+            max_weight = max(weights)
+            for weight in weights:
+                normalized_weights.append(weight/max_weight)
+
+            #calculate Neff =1/sum(normalized_weight^2)
+            Neff=0.0
+            for n_weight in normalized_weights:
+                if n_weight**2 == 0.0:
+                    pass
+                else:
+                    Neff += 1/(n_weight**2)
+            # print Neff
+            if Neff < number_of_particles/2:
+                RESAMPLE = True
+            else:
+                RESAMPLE = False
+
+        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles),"Neff:",Neff
 
 if __name__ == "__main__":
     MINIMUM_PARTICLES=5
     PARTICLE_NUM_CHANGE_DEPENDENT = False
     PARTICLE_NUM_STEP_DEPENDENT = False
     PARTICLE_NUM_SPLIT = False
+    PARTICLE_NUM_GMAPPING=True
+
     main()
