@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 # landmarks which can be sensed by the robot (in meters)
 landmarks = [[20.0, 20.0], [20.0, 80.0], [20.0, 50.0],
              [50.0, 20.0], [50.0, 80.0], [80.0, 80.0],
-             [80.0, 20.0], [80.0, 50.0]]
+             [80.0, 20.0], [80.0, 50.0], [85.0, 20.0],
+             [20.0, 15.0]]
 
 # size of one dimension (in meters)
 world_size = 100.0
@@ -229,73 +230,68 @@ def visualization(robot, step, p, pr, weights):
 
 
 def main():
-    # create a robot
+    # create a robot for the particle filter demo
     myrobot = RobotClass()
+    myrobot = myrobot.move(0.1, 5.0)
+    z = myrobot.sense()
 
-    # set noise parameters
-    #5mm error per move, .1 degree orientation per move, 10cm for measurment
-    myrobot.set_noise(0.005 ,0.0017, 0.1)
-    myrobot.set(50., 50., 1.25*pi) 
 
-    robotMeasurment = myrobot.sense()
-    
-    myrobot = myrobot.move(-pi/2., 15.)
-
-    #Start of particle filter implementation
-    number_of_particles=1000 #particle at the beggining of the simulation
-    list_of_particles=[]
-    list_of_likelihoods=[]
+    # create a set of particles
+    number_of_particles = 1000
+    list_of_particles = []    
 
     for i in range(number_of_particles):
         x = RobotClass()
-        x.set_noise(0.005 ,0.0017, 0.1)
-        #Since we do now know where the robot will start
-        #lets put the particels uniformly distributed thought the map
-        x.set(random.uniform(0,wordSize),random.uniform(0,wordSize), random.uniform(0,2*pi))
+        x.set_noise(0.05, 0.05, 5.0)
         list_of_particles.append(x)
 
-    number_of_steps=50
+    steps = 50  # particle filter steps
 
-    for step in range(number_of_steps):
+    for step in range(steps):
 
-        # # First move the actual robot
-        myrobot = myrobot.move(0.0,2.0)
-        robotMeasurment = myrobot.sense()
+        # move the robot and sense the environment after that
+        myrobot = myrobot.move(0.1, 5.)
+        measurment = myrobot.sense()
 
-        moved_particles=[]
-        for particle_index in range(len(list_of_particles)):
-            #move all the particles the same way as the actual robot
-            moved_particles.append(list_of_particles[particle_index].move(0.0,2.0))
+        # now we simulate a robot motion for each of these particles
+        moved_particles = []
+
+        for i in range(number_of_particles):
+            moved_particles.append( list_of_particles[i].move(0.1, 5.) )
+
         list_of_particles = moved_particles
 
+        # generate particle weights depending on robot's measurement
+        weights = []
 
-        #Lets generate particle weights depending on the robot's measurments
-        weights=[]
+        for i in range(number_of_particles):
+            weights.append(list_of_particles[i].measurement_prob(measurment))
 
-        for particle_index in range(len(list_of_particles)):
-            weights.append(list_of_particles[particle_index].measurement_prob(robotMeasurment))
-        print max(weights)
+        # resampling with a sample probability proportional to the importance weight
+        resampled_particles = []
 
-        #Resmpling with a sample probability proportional to the importance weight
-        resampled_particles=[]
         index = int(random.random() * number_of_particles)
         beta = 0.0
-        max_weight = max(weights)
+        mw = max(weights)
 
-        for i in range(len(list_of_particles)):
-            beta += random.random() * 2.0 * max_weight
+        for i in range(number_of_particles):
+            beta += random.random() * 2.0 * mw
 
             while beta > weights[index]:
                 beta -= weights[index]
-                index = (index+1)%number_of_particles
-                
-            print "Step:",step,"Index:",index    
+                index = (index + 1) % number_of_particles
+            # print "Step:",step,"Index:",index
             resampled_particles.append(list_of_particles[index])
+
+        # here we get a set of co-located particles
         list_of_particles = resampled_particles
 
-        visualization(myrobot,step,moved_particles,resampled_particles,weights)
-
-
+        # print 'Step = ', step, ', Evaluation = ', evaluation(myrobot, list_of_particles)
+        # visualize the current step
+        measurement_ratio = min(weights)/max(weights)
+        print 'Step = ', step, ', Evaluation = ', measurement_ratio,", Length = ", len(list_of_particles)
+        visualization(myrobot, step, moved_particles, resampled_particles, weights)
+    # print 'p = ', list_of_particles
 
 
 if __name__ == "__main__":
