@@ -290,13 +290,22 @@ def main():
                     index = (index + 1) % number_of_particles
                 resampled_particles.append(list_of_particles[index])
             list_of_particles = resampled_particles
-        # else:
-        #     for i in range(number_of_particles):
-        #         if random.random()< 0.9:
-        #             resampled_particles.append(list_of_particles[i])
-        #     list_of_particles = resampled_particles
+        else:
+            index = int(random.random() * number_of_particles)
+            beta = 0.0
+            mw = max(weights)
 
-        # number_of_particles = len(list_of_particles)
+            particles_to_keep = int(number_of_particles*random.random())
+            for i in range(particles_to_keep):
+                beta += random.random() * 2.0 * mw
+
+                while beta > weights[index]:
+                    beta -= weights[index]
+                    index = (index + 1) % number_of_particles
+                resampled_particles.append(list_of_particles[index])
+            list_of_particles = resampled_particles
+
+        number_of_particles = len(list_of_particles)
 
         # visualize the current step
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
@@ -346,12 +355,12 @@ def main():
                 else:
                     Neff += 1/(n_weight**2)
 
-            # if Neff < starting_num_of_particles/2:
-            #     RESAMPLE = True
-            # else:
-            #     RESAMPLE = False
+            if Neff < starting_num_of_particles/2:
+                RESAMPLE = True
+            else:
+                RESAMPLE = False
 
-        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles),"Neff:",Neff
+        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles),"Neff:",Neff,"RESAMPLE:",RESAMPLE
 
 if __name__ == "__main__":
     MINIMUM_PARTICLES=5
