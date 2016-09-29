@@ -236,18 +236,20 @@ def main():
     z = myrobot.sense()
 
 
-    # create a set of particles
-    number_of_particles = 1000
+    number_of_particles = 500
     list_of_particles = []    
 
-    for i in range(number_of_particles):
-        x = RobotClass()
-        x.set_noise(0.05, 0.05, 5.0)
-        list_of_particles.append(x)
 
     steps = 50  # particle filter steps
-
+    previous_step_ratio=0
     for step in range(steps):
+
+        # create a set of particles
+        for i in range(number_of_particles):
+            x = RobotClass()
+            x.set_noise(0.05, 0.05, 5.0)
+            list_of_particles.append(x)
+
 
         # move the robot and sense the environment after that
         myrobot = myrobot.move(0.1, 5.)
@@ -267,6 +269,8 @@ def main():
         for i in range(number_of_particles):
             weights.append(list_of_particles[i].measurement_prob(measurment))
 
+        measurement_ratio = min(weights)/max(weights)
+
         # resampling with a sample probability proportional to the importance weight
         resampled_particles = []
 
@@ -280,18 +284,25 @@ def main():
             while beta > weights[index]:
                 beta -= weights[index]
                 index = (index + 1) % number_of_particles
-            # print "Step:",step,"Index:",index
             resampled_particles.append(list_of_particles[index])
-
-        # here we get a set of co-located particles
         list_of_particles = resampled_particles
 
-        # print 'Step = ', step, ', Evaluation = ', evaluation(myrobot, list_of_particles)
+
+        # number_of_particles= max(number_of_particles - step*10, 15)
+
         # visualize the current step
-        measurement_ratio = min(weights)/max(weights)
-        print 'Step = ', step, ', Evaluation = ', measurement_ratio,", Length = ", len(list_of_particles)
+        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles)
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
-    # print 'p = ', list_of_particles
+
+        if (measurement_ratio - previous_step_ratio > 0):
+            number_of_particles -= 15
+        else:
+            number_of_particles += 10
+        if number_of_particles < 20:
+            number_of_particles = 20
+
+        previous_step_ratio = measurement_ratio
+
 
 
 if __name__ == "__main__":
