@@ -236,8 +236,8 @@ def main():
     z = myrobot.sense()
 
     RESAMPLE=True
-    number_of_particles = 500
-    starting_num_of_particles=500
+    number_of_particles = 1000
+    starting_num_of_particles=1000
     list_of_particles = []    
 
 
@@ -295,7 +295,8 @@ def main():
             beta = 0.0
             mw = max(weights)
 
-            particles_to_keep = int(number_of_particles*random.random())
+            particles_to_keep = int(number_of_particles*random.random()*1.5)
+
             for i in range(particles_to_keep):
                 beta += random.random() * 2.0 * mw
 
@@ -306,6 +307,7 @@ def main():
             list_of_particles = resampled_particles
 
         number_of_particles = len(list_of_particles)
+
 
         # visualize the current step
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
@@ -363,7 +365,7 @@ def main():
         print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles),"Neff:",Neff,"RESAMPLE:",RESAMPLE
 
 if __name__ == "__main__":
-    MINIMUM_PARTICLES=5
+    MINIMUM_PARTICLES=10
     PARTICLE_NUM_CHANGE_DEPENDENT = False
     PARTICLE_NUM_STEP_DEPENDENT = False
     PARTICLE_NUM_SPLIT = False
