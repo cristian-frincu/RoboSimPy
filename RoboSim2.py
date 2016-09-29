@@ -237,6 +237,7 @@ def main():
 
     RESAMPLE=True
     number_of_particles = 500
+    starting_num_of_particles=500
     list_of_particles = []    
 
 
@@ -274,8 +275,8 @@ def main():
         # resampling with a sample probability proportional to the importance weight
         #have the ability to resample, or just ignore the resampling and keep
         #the same particles
+        resampled_particles = []
         if RESAMPLE:
-            resampled_particles = []
 
             index = int(random.random() * number_of_particles)
             beta = 0.0
@@ -289,9 +290,13 @@ def main():
                     index = (index + 1) % number_of_particles
                 resampled_particles.append(list_of_particles[index])
             list_of_particles = resampled_particles
-        else:
-            resampled_particles = list_of_particles
+        # else:
+        #     for i in range(number_of_particles):
+        #         if random.random()< 0.9:
+        #             resampled_particles.append(list_of_particles[i])
+        #     list_of_particles = resampled_particles
 
+        # number_of_particles = len(list_of_particles)
 
         # visualize the current step
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
@@ -340,11 +345,11 @@ def main():
                     pass
                 else:
                     Neff += 1/(n_weight**2)
-            # print Neff
-            if Neff < number_of_particles/2:
-                RESAMPLE = True
-            else:
-                RESAMPLE = False
+
+            # if Neff < starting_num_of_particles/2:
+            #     RESAMPLE = True
+            # else:
+            #     RESAMPLE = False
 
         print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles),"Neff:",Neff
 
