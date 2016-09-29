@@ -236,7 +236,7 @@ def main():
     z = myrobot.sense()
 
 
-    number_of_particles = 500
+    number_of_particles = 1000
     list_of_particles = []    
 
 
@@ -288,22 +288,44 @@ def main():
         list_of_particles = resampled_particles
 
 
-        # number_of_particles= max(number_of_particles - step*10, 15)
 
         # visualize the current step
-        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles)
+        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles)
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
 
-        if (measurement_ratio - previous_step_ratio > 0):
-            number_of_particles -= 15
-        else:
-            number_of_particles += 10
-        if number_of_particles < 20:
-            number_of_particles = 20
+        if PARTICLE_NUM_CHANGE_DEPENDENT:
+            #This method of cutting down on the number of particles takes into account 
+            #the change in the ratio, if the change in the ratio is negative, 
+            #it means we are geting a better estimate, so we want to decrease the 
+            #number of particles. If the change in the measurment ratio is positive,
+            #it means we are getting worst measurments, so we want to increase the number of 
+            #particles
+            if (measurement_ratio - previous_step_ratio > 0):
+                number_of_particles -= 15
+            else:
+                number_of_particles += 10
 
-        previous_step_ratio = measurement_ratio
+            #having a minimum number of particles
+            #to make sure we dont end up with zero
+            if number_of_particles < MINIMUM_PARTICLES:
+                number_of_particles = MINIMUM_PARTICLES
 
+            previous_step_ratio = measurement_ratio
+
+        if PARTICLE_NUM_STEP_DEPENDENT:
+            number_of_particles-= step*50
+            if number_of_particles < MINIMUM_PARTICLES:
+                number_of_particles = MINIMUM_PARTICLES
+
+        if PARTICLE_NUM_SPLIT:
+            number_of_particles -= number_of_particles/2
+            if number_of_particles < MINIMUM_PARTICLES:
+                number_of_particles = MINIMUM_PARTICLES
 
 
 if __name__ == "__main__":
+    MINIMUM_PARTICLES=5
+    PARTICLE_NUM_CHANGE_DEPENDENT = False
+    PARTICLE_NUM_STEP_DEPENDENT = False
+    PARTICLE_NUM_SPLIT = False
     main()
