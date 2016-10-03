@@ -72,19 +72,19 @@ class RobotClass:
 
         return z
 
-    def sense_angle(self,degrees=True):
+    def sense_angle(self,degrees=True, landmarks= landmarks):
         # Sense the angle from the robot to each of the landmarks
         # The angle = tan-1(m) where m is the slope of the line between
         # the two points
-        # m = (y2-y1)/(x2-x1) where 2 is the landmark and 1 is the robot
+        # m = (y2-y1)/(x2-x1) where 1 is the landmark and 2 is the robot
         z_angle = []
 
         for i in range(len(landmarks)):
-            slope = (landmarks[i][1] - self.y)/(landmarks[i][0]-self.x)
-            angle = math.atan(slope) #atan returns in radians
+            slope = (self.y - landmarks[i][1])/(self.x - landmarks[i][0])
+            angle = atan(slope) #atan returns in radians
             if degrees == True:
                 #Append the angle in degrees
-                z_angle.append(math.degrees(angle))
+                z_angle.append(angle*57.295779513)
             else:
                 #Append the angle in radians
                 z_angle.append(angle)
