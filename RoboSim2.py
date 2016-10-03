@@ -118,7 +118,7 @@ def main():
     z = myrobot.sense()
 
     RESAMPLE=True
-    number_of_particles = 50
+    number_of_particles = 500
     list_of_particles = []    
 
 
@@ -165,11 +165,17 @@ def main():
         ax = fig.add_subplot(111)
         n, bins, rectangles = ax.hist(normalized_weights, 50, normed=True)
         fig.canvas.draw()
-        plt.savefig("output/wtHist_" + str(step) + ".png")
-        # plt.close()
         # plt.pause(0.05)
 
         measurement_ratio = min(weights)/max(weights)
+        if measurement_ratio < 0.01:
+            RESAMPLE = True
+        else:
+            RESAMPLE = False
+
+        plt.title('Particle Weight Histogram, step:' + str(step) +" Resample:" + str(RESAMPLE))
+        plt.savefig("output/wtHist_" + str(step) + ".png")
+        plt.close()
 
         # resampling with a sample probability proportional to the importance weight
         #have the ability to resample, or just ignore the resampling and keep
@@ -250,7 +256,7 @@ def main():
             # else:
             #     RESAMPLE = False
 
-        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles)
+        print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles), "Resample:",RESAMPLE
 
 if __name__ == "__main__":
     MINIMUM_PARTICLES=10
@@ -259,6 +265,5 @@ if __name__ == "__main__":
     PARTICLE_NUM_SPLIT = False
     PARTICLE_NUM_GMAPPING=False
 
-    RESAMPLE = True
 
     main()
