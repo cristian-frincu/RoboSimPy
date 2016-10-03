@@ -3,6 +3,7 @@ import random
 
 
 # landmarks which can be sensed by the robot (in meters)
+# [x,y]
 landmarks = [[20.0, 20.0], [20.0, 80.0], [20.0, 50.0],
              [50.0, 20.0], [50.0, 80.0], [80.0, 80.0],
              [80.0, 20.0], [80.0, 50.0], [85.0, 20.0],
@@ -70,6 +71,26 @@ class RobotClass:
             z.append(dist)
 
         return z
+
+    def sense_angle(self,degrees=True):
+        # Sense the angle from the robot to each of the landmarks
+        # The angle = tan-1(m) where m is the slope of the line between
+        # the two points
+        # m = (y2-y1)/(x2-x1) where 2 is the landmark and 1 is the robot
+        z_angle = []
+
+        for i in range(len(landmarks)):
+            slope = (landmarks[i][1] - self.y)/(landmarks[i][0]-self.x)
+            angle = math.atan(slope) #atan returns in radians
+            if degrees == True:
+                #Append the angle in degrees
+                z_angle.append(math.degrees(angle))
+            else:
+                #Append the angle in radians
+                z_angle.append(angle)
+
+
+        return z_angle 
 
 
     def move(self, turn, forward):
