@@ -155,13 +155,19 @@ def main():
         normalized_weights=[]
         max_weight = max(weights)
         for weight in weights:
-            
+
             normalized_weights.append(weight/max_weight)
 
-        print normalized_weights
-        plt.hist(normalized_weights, bins='auto')
-        plt.title("Histogram")
-        plt.show()
+        # print normalized_weights
+
+        # plt.ion()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        n, bins, rectangles = ax.hist(normalized_weights, 50, normed=True)
+        fig.canvas.draw()
+        plt.savefig("output/wtHist_" + str(step) + ".png")
+        # plt.close()
+        # plt.pause(0.05)
 
         measurement_ratio = min(weights)/max(weights)
 
