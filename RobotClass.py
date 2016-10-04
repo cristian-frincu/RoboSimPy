@@ -80,8 +80,31 @@ class RobotClass:
         z_angle = []
 
         for i in range(len(landmarks)):
-            slope = (self.y - landmarks[i][1])/(self.x - landmarks[i][0])
-            angle = atan(slope) #atan returns in radians
+            #If the div by zero does happen, it means we are standing on the 
+            #landmark, in which case there is no angle to the landmark
+            if (landmarks[i][0]-self.x) != 0:
+                slope = abs((self.y-landmarks[i][1])/(self.x-landmarks[i][0]))
+                angle = atan(slope) #atan returns in radians
+
+                delta_y = (self.y-landmarks[i][1])
+                delta_x = (self.x-landmarks[i][0])
+                
+                #This is done in order to get all the range readings
+                #In the regular coordinate system, where zero points
+                #to the right in a graph, and all measurments are
+                #angles from origin 
+                if(delta_y >= 0 and delta_x >= 0):
+                    angle = angle
+                elif(delta_y > 0 and delta_x < 0):
+                    angle = pi-angle
+                elif(delta_y< 0 and delta_x <0):
+                    angle = pi+angle
+                elif(delta_y<0 and delta_x > 0):
+                    angle = 2*pi - angle
+
+            else:
+                angle=0
+
             if degrees == True:
                 #Append the angle in degrees
                 z_angle.append(angle*57.295779513)
