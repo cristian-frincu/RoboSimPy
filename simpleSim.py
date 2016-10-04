@@ -96,11 +96,12 @@ def visualize_robot_view(robot, step,landmarks,robot_name="0",path=[]):
 
     #robot's path
     if len(path)>0:
+    	path.reverse()
         previous_pose = path[0]
         for pose in path:
             x_new = pose[0] - path[0][0]
             y_new = pose[1] - path[0][1]
-            arrow = plt.Circle((-x_new, -y_new),0.5, facecolor='#0000FF', edgecolor='#000000')
+            arrow = plt.Circle((x_new, y_new), 0.5, facecolor='#00FFFF', edgecolor='#000000')
             plt.gca().add_patch(arrow)
             previous_pose = pose
 
@@ -144,7 +145,7 @@ def main():
         print "Step:",step
         visualize_robot_view(myrobot,step,possible_landmark_loc,path = myrobot.perceived_path)
 
-    print myrobot.perceived_path
+
 
 
 
