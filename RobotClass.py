@@ -23,7 +23,6 @@ class RobotClass:
         self.orientation = random.random() * 2.0 * pi   # robot's orientation
         self.path = [] # the path the robot has actually traveled
 
-
         self.perceived_x = 0.0 # robots x coordinate based on odometry
         self.perceived_y = 0.0 # robots y coordinate based on odometry
         self.perceived_path = [] # the path the robot thinks has traveled
@@ -151,11 +150,11 @@ class RobotClass:
         #this is the value you would tell the robot to travel,
         #We cannot measure the noise
         dist = float(forward)
-        perceived_x = self.perceived_x + (cos(orientation) * dist)
-        perceived_y = self.perceived_y + (sin(orientation) * dist)
+        self.perceived_x = self.perceived_x + (cos(orientation) * dist)
+        self.perceived_y = self.perceived_y + (sin(orientation) * dist)
 
         #Also append the new point to the path
-        self.perceived_path.append([perceived_x,perceived_y])
+        self.perceived_path.append([self.perceived_x,self.perceived_y])
 
 
         # cyclic truncate

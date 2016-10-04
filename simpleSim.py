@@ -70,7 +70,7 @@ def visualization(robot, step, p, pr,landmarks):
     plt.savefig("output/figure_" + str(step) + ".png")
     plt.close()
 
-def visualize_robot_view(robot, step,landmarks,robot_name="0"):
+def visualize_robot_view(robot, step,landmarks,robot_name="0",path=[]):
     """ Visualization
     :param robot:   the current robot object
     :param step:    the current step
@@ -92,6 +92,18 @@ def visualize_robot_view(robot, step,landmarks,robot_name="0"):
     for lm in landmarks:
         circle = plt.Circle((lm[0], lm[1]), 1., facecolor='#cc0000', edgecolor='#330000')
         plt.gca().add_patch(circle)
+
+
+    #robot's path
+    if len(path)>0:
+        previous_pose = path[0]
+        for pose in path:
+            x_new = pose[0] - path[0][0]
+            y_new = pose[1] - path[0][1]
+            arrow = plt.Circle((-x_new, -y_new),0.5, facecolor='#0000FF', edgecolor='#000000')
+            plt.gca().add_patch(arrow)
+            previous_pose = pose
+
 
     # robot's location
     # circle = plt.Circle((robot.x, robot.y), 1., facecolor='#6666ff', edgecolor='#0000cc')
@@ -116,7 +128,7 @@ def main():
     #robot is. distance readings should still have uncertainty
     myrobot.set_noise(0.05,0.5,0.5)
     z = myrobot.sense()
-    for step in range(5):
+    for step in range(10):
         myrobot.move(0.1,2,return_new_state=False)
         z_angle =  myrobot.sense_angle(landmarks = landmarks,degrees=False)
         distance = myrobot.sense()
@@ -128,10 +140,11 @@ def main():
             mark_y = mark[0]*sin(mark[1])
             possible_landmark_loc.append([mark_x,mark_y])
 
-        print myrobot.perceived_path
-        visualization(myrobot,step,[myrobot],[myrobot],landmarks)
-        visualize_robot_view(myrobot,step,possible_landmark_loc)
+        # visualization(myrobot,step,[myrobot],[myrobot],landmarks)
+        print "Step:",step
+        visualize_robot_view(myrobot,step,possible_landmark_loc,path = myrobot.perceived_path)
 
+    print myrobot.perceived_path
 
 
 
