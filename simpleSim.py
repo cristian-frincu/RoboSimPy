@@ -127,10 +127,13 @@ def main():
     #In this simulation, I only want to test the mapping
     #So we can assume we know with 100% certainty where our
     #robot is. distance readings should still have uncertainty
-    myrobot.set_noise(0.05,0.5,0.5)
+    myrobot.set_noise(0.00,0.0,4)
     z = myrobot.sense()
+
+    landmark_belief=[]
+
     for step in range(10):
-        myrobot.move(0.1,2,return_new_state=False)
+        myrobot.move(0.1,5,return_new_state=False)
         z_angle =  myrobot.sense_angle(landmarks = landmarks,degrees=False)
         distance = myrobot.sense()
         landmark_description = zip(distance,z_angle)
@@ -141,9 +144,30 @@ def main():
             mark_y = mark[0]*sin(mark[1])
             possible_landmark_loc.append([mark_x,mark_y])
 
-        # visualization(myrobot,step,[myrobot],[myrobot],landmarks)
-        print "Step:",step
+
+        # Here is where we do some sort of matching between the different
+        # landmarks, what we want to find is which new landmark matches
+        # an old landmark
+
+     	# If the belief of the landmarks is empty, means the rover did not 
+     	# see any landmarks yet. So just assume the first you see are correct
+        if len(landmark_belief)==0:
+        	landmark_belief=possible_landmark_loc
+        else:
+        	# If you have seen other landmarks before, you need a correspondance 
+        	best_landmarks=[]
+        	for new_landmark in possible_landmark_loc:
+        		bestScore = 100
+        		bestMatch=[]
+        		for old_landmark in landmark_belief:
+        			score = sqrt((old_landmark[0]-new_landmark[0])**2+(old_landmark[1]-new_landmark[1])**2)
+        			if bestScore > score :
+        				bestScore = score
+        				bestMatch = new_landmark
+
         visualize_robot_view(myrobot,step,possible_landmark_loc,path = myrobot.perceived_path)
+
+        print "Step:",step
 
 
 
