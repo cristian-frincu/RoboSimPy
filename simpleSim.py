@@ -133,8 +133,8 @@ def main():
     myrobot= RobotClass()
     myrobot.set(50,50,0)
 
-    FORWARD_SPEED=2
-    TURN_ANGLE = 0
+    FORWARD_SPEED=2.5
+    TURN_ANGLE = 0.1
 
     #In this simulation, I only want to test the mapping
     #So we can assume we know with 100% certainty where our
@@ -154,7 +154,7 @@ def main():
     landmark_x_sum=[0 for i in range(len(landmarks))]
     landmark_y_sum=[0 for i in range(len(landmarks))]
 
-    for step in range(20):
+    for step in range(40):
         myrobot.move(TURN_ANGLE,FORWARD_SPEED,return_new_state=False)
         z_angle =  myrobot.sense_angle(landmarks = landmarks,degrees=False)
         distance = myrobot.sense()
@@ -164,8 +164,8 @@ def main():
         # We need to keep track of the distance traveled by the robot
         # in order to go back and be able to express the landmark position
         # in the same coordiante frame as the original landmarks
-        robotTravel_x+= FORWARD_SPEED*sin(TURN_ANGLE)
-        robotTravel_y+=FORWARD_SPEED*cos(TURN_ANGLE)
+        robotTravel_x+= FORWARD_SPEED*cos(TURN_ANGLE)
+        robotTravel_y+=FORWARD_SPEED*sin(TURN_ANGLE)
 
 
         # Here we are getting the location of where the robot thinks the 
@@ -198,7 +198,6 @@ def main():
             summed_location.append([landmark_x_sum[landmark_counter],landmark_y_sum[landmark_counter]])
             # print landmark_x_sum[landmark_counter]/(step+1),landmark_y_sum[landmark_counter]/(step+1)
             landmark_counter+=1
-        print ""
 
         averaged_location =[[x[0]/(step+1),x[1]/(step+1)] for x in summed_location]
 
