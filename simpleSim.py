@@ -4,7 +4,7 @@ from math import *
 
 
 # landmarks which can be sensed by the robot (in meters)
-landmarks = [[20.0, 20.0]]
+landmarks = [[20.0, 20.0],[20.0,80.0]]
 
 # size of one dimension (in metelandmarks[i][0]rs)
 world_size = 100.0
@@ -133,20 +133,26 @@ def main():
     myrobot= RobotClass()
     myrobot.set(50,50,0)
 
-    FORWARD_SPEED=4
-    TURN_ANGLE = 0.2
+    FORWARD_SPEED=2
+    TURN_ANGLE = 0
 
     #In this simulation, I only want to test the mapping
     #So we can assume we know with 100% certainty where our
     #robot is. distance readings should still have uncertainty
-    myrobot.set_noise(0.00,0.0,4)
+    myrobot.set_noise(0.00,0.0,0)
     robotTravel_x = 0
     robotTravel_y = 0
     z = myrobot.sense()
 
-    landmark_belief=[]
-    avg_x_landmark=0.0
-    avg_y_landmark=0.0
+
+    # In order to cut down on the noise due to measurment, we will
+    # sum the measurments and take an average of the values, to get 
+    # a more error prone result
+    # A better estimation could be done, if instead of just taking the
+    # avg of the measurments we model the error distribution of the sensor
+    # and use that to estimate the measurment with the highest likelyhood
+    landmark_x_sum=[0 for i in range(len(landmarks))]
+    landmark_y_sum=[0 for i in range(len(landmarks))]
 
     for step in range(20):
         myrobot.move(TURN_ANGLE,FORWARD_SPEED,return_new_state=False)
@@ -154,35 +160,55 @@ def main():
         distance = myrobot.sense()
         landmark_description = zip(distance,z_angle)
 
+
+        # We need to keep track of the distance traveled by the robot
+        # in order to go back and be able to express the landmark position
+        # in the same coordiante frame as the original landmarks
+        robotTravel_x+= FORWARD_SPEED*sin(TURN_ANGLE)
+        robotTravel_y+=FORWARD_SPEED*cos(TURN_ANGLE)
+
+
         # Here we are getting the location of where the robot thinks the 
         # landmarks are.
+        # Possible landmarks, holds the (x,y) of the lanmark by just
+        # taking a measurment with the sensor
         possible_landmark_loc=[]
+
+        # The believed_x/y_location holds a value that is absolute to 
+        # the frame of the map, and not relative to the frame of the 
+        # robot
+        believed_location=[]
+
+        landmark_counter=0
+
+        summed_location=[]
+
+        print "Step:",step
         for mark in landmark_description:
             mark_x = mark[0]*cos(mark[1])
             mark_y = mark[0]*sin(mark[1])
             possible_landmark_loc.append([mark_x,mark_y])
 
-        # We need to keep track of the distance traveled by the robot
-        # in order to go back and be able to express the landmark position
-        # in the same coordiante frame as the original landmarks
-        robotTravel_x+= FORWARD_SPEED*cos(TURN_ANGLE)
-        robotTravel_y+=FORWARD_SPEED*sin(TURN_ANGLE)
+            believed_x_location = possible_landmark_loc[landmark_counter][0]+robotTravel_x
+            believed_y_location = possible_landmark_loc[landmark_counter][1]+robotTravel_y
+            believed_location.append([believed_x_location,believed_y_location])
 
-        believed_x_location = 50+possible_landmark_loc[0][0]+robotTravel_x
-        believed_y_location = 50+possible_landmark_loc[0][1]+robotTravel_y
+            landmark_x_sum[landmark_counter]+=believed_x_location
+            landmark_y_sum[landmark_counter]+=believed_y_location
+            summed_location.append([landmark_x_sum[landmark_counter],landmark_y_sum[landmark_counter]])
+            # print landmark_x_sum[landmark_counter]/(step+1),landmark_y_sum[landmark_counter]/(step+1)
+            landmark_counter+=1
+        print ""
 
+        averaged_location =[[x[0]/(step+1),x[1]/(step+1)] for x in summed_location]
 
-        # print "Believed Location:(x,y)",believed_x_location, believed_y_location
-        # print "Measurment Error:",map_error(landmarks,possible_landmark_loc)
+        # print averaged_location
 
-        #We are taking an average of the multiple measurments that way
-        # the error from the measurment is cut down on
-        avg_x_landmark+= believed_x_location
-        avg_y_landmark+= believed_y_location
+        # visualize_robot_view(myrobot,step,possible_landmark_loc,path = myrobot.perceived_path)
+        visualize_robot_view(myrobot,step,averaged_location,path = myrobot.perceived_path)
 
-        visualize_robot_view(myrobot,step,possible_landmark_loc,path = myrobot.perceived_path)
-        print "Step:",step,
-    	print avg_x_landmark/(step+1), avg_y_landmark/(step+1)
+        # visualize_robot_view(myrobot,step,believed_location,path = myrobot.perceived_path,robot_name="1")
+        # visualization(myrobot,step,[myrobot],[myrobot],landmarks)
 
 if __name__ == "__main__":
     main()
