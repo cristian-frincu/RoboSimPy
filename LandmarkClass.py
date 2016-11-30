@@ -19,7 +19,6 @@ class LandmarkClass:
 		# of landmark
 		self.measurment_sum_x=0.0
 		self.measurment_sum_y=0.0
-"Sustainable development seeks to meet the needs and aspirations of the present without compromising the ability to meet those of the future."		
 		#Since we are taking the distance measurments from the 
 		# robot, and the robot is assumed to be at 0,0 at all 
 		# times, we will get coordinates to the robot. Those
