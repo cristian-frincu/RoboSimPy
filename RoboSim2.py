@@ -19,7 +19,7 @@ from RobotClass import RobotClass
 landmarks = [[20.0, 20.0], [20.0, 80.0], [20.0, 50.0],
              [50.0, 20.0], [50.0, 80.0], [80.0, 80.0],
              [80.0, 20.0], [80.0, 50.0], [85.0, 20.0],
-             [20.0, 15.0]]
+             [20.0, 15.0], [45.0, 45.0]]
 
 # size of one dimension (in meters)
 world_size = 100.0
@@ -161,10 +161,10 @@ def main():
         # print normalized_weights
 
         # plt.ion()
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        n, bins, rectangles = ax.hist(normalized_weights, 50, normed=True)
-        fig.canvas.draw()
+      #  vfig = plt.figure()
+      #  ax = fig.add_subplot(111)
+      #  n, bins, rectangles = ax.hist(normalized_weights, 50, normed=True)
+      #  fig.canvas.draw()
         # plt.pause(0.05)
 
         measurement_ratio = min(weights)/max(weights)
@@ -173,9 +173,9 @@ def main():
         else:
             RESAMPLE = False
 
-        plt.title('Particle Weight Histogram, step:' + str(step) +" Resample:" + str(RESAMPLE))
-        plt.savefig("output/wtHist_" + str(step) + ".png")
-        plt.close()
+        #plt.title('Particle Weight Histogram, step:' + str(step) +" Resample:" + str(RESAMPLE))
+        #plt.savefig("output/wtHist_" + str(step) + ".png")
+        #plt.close()
 
         # resampling with a sample probability proportional to the importance weight
         #have the ability to resample, or just ignore the resampling and keep
@@ -205,65 +205,7 @@ def main():
         visualization(myrobot, step, moved_particles, resampled_particles, weights)
 
 
-        if PARTICLE_NUM_CHANGE_DEPENDENT:
-            #This method of cutting down on the number of particles takes into account 
-            #the change in the ratio, if the change in the ratio is negative, 
-            #it means we are geting a better estimate, so we want to decrease the 
-            #number of particles. If the change in the measurment ratio is positive,
-            #it means we are getting worst measurments, so we want to increase the number of 
-            #particles
-            if (measurement_ratio - previous_step_ratio > 0):
-                number_of_particles -= 15
-            else:
-                number_of_particles += 10
-
-            #having a minimum number of particles
-            #to make sure we dont end up with zero
-            if number_of_particles < MINIMUM_PARTICLES:
-                number_of_particles = MINIMUM_PARTICLES
-
-            previous_step_ratio = measurement_ratio
-
-        if PARTICLE_NUM_STEP_DEPENDENT:
-            number_of_particles-= step*50
-            if number_of_particles < MINIMUM_PARTICLES:
-                number_of_particles = MINIMUM_PARTICLES
-
-        if PARTICLE_NUM_SPLIT:
-            number_of_particles -= number_of_particles/2
-            if number_of_particles < MINIMUM_PARTICLES:
-                number_of_particles = MINIMUM_PARTICLES
-
-        if PARTICLE_NUM_GMAPPING:
-            #Find Neff, the measure of dispertion of the importace weights
-            #Start by normalizing the weights
-            normalized_weights=[]
-            max_weight = max(weights)
-            for weight in weights:
-                normalized_weights.append(weight/max_weight)
-
-            #calculate Neff =1/sum(normalized_weight^2)
-            Neff=0.0
-            for n_weight in normalized_weights:
-                if n_weight**2 == 0.0:
-                    pass
-                else:
-                    Neff += 1/(n_weight**2)
-
-            #For resting just resample at all times
-            # if Neff > starting_num_of_particles*20:
-            #     RESAMPLE = True
-            # else:
-            #     RESAMPLE = False
-
         print 'Step = ', step, ', Ratio = ', measurement_ratio,", Length = ", len(list_of_particles), "Evaluation:", evaluation(myrobot,resampled_particles), "Resample:",RESAMPLE
 
 if __name__ == "__main__":
-    MINIMUM_PARTICLES=10
-    PARTICLE_NUM_CHANGE_DEPENDENT = False
-    PARTICLE_NUM_STEP_DEPENDENT = False
-    PARTICLE_NUM_SPLIT = False
-    PARTICLE_NUM_GMAPPING=False
-
-
     main()
