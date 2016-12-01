@@ -45,20 +45,33 @@ def main():
 	for i in range(numOfRobots):
 		robot = RobotClass()
 		robot.x = i * 15 + 30
-		robot.y = 10
+		robot.y = 2.5 * i + 5
 		robot.orientation = 3.14/2
+		robot.forward_noise = 0.5
+		robot.turn_noise = 0.3 
 		robots.append(robot)
 		
+#The basic algorithm is that it will move the robot which is behind
+#the other ones in line
 
-	numOfSteps=10
-	robotToMove=0
-	for step in range(numOfSteps):
+	numOfSteps=15
+	robotToMove=3 # which robot to move first
+	for step in range(numOfSteps*numOfRobots):
 		visualization(robots,step)
 		toMove = min(robots, key=lambda robot: robot.y)
-		print "ToMove:", toMove
 		for i in range(numOfRobots):
 			if robots[i]== toMove:
-				robots[i] = toMove.move(0,5.0)
+#An interesting limitation of python, is that you cannot run range(n).remove(m) in one line
+#since that would oddly return None. When done in two lines, it works as expected
+				robotsInFront = range(numOfRobots)
+				robotsInFront.remove(i)
+#We are getting a list of all the possible robots. Now we remove the robot
+#that is at the back
+				print "Move:",i,"Stay:",robotsInFront
+				
+				spaceBetweenFrontRobots = robots[robotsInFront[0]].x - robots[robotsInFront[1]].x
+				xLocationWhereToTravel = robots[robotsInFront[0]].x  + spaceBetweenFrontRobots/2.0
+				robots[i] = toMove.move(0 , 5.0)
 
 
 if __name__=="__main__":
